@@ -93,6 +93,8 @@ if iscolumn(CorrFilter)
     CorrFilter = transpose(CorrFilter); % need row vector for filter block
 end
 
+%stimulation time to be length of the signal plus 30 time units
+%30 time units= 10 in front end + 10 in back end + 10 buffer
 SimTime = length(RxSignal) + WindowLen + 30;
 
 % Simulate model
@@ -101,13 +103,17 @@ slout = sim('project_detect');
 % Correlation filter output
 FilterOutSL = getLogged(slout,'filter_out');
 FilterValid = getLogged(slout,'filter_valid');
-FilterOutSL = FilterOutSL(FilterValid);
+FilterOutSL = FilterOutSL(FilterValid);%signal through filter
+
+%to comapare and print logged signal values
 compareData(real(FilterOut),real(FilterOutSL),{2 3 1},'ML vs SL correlator output (re)');
 compareData(imag(FilterOut),imag(FilterOutSL),{2 3 2},'ML vs SL correlator output (im)');
 
 % Magnitude squared output
 MagSqSL = getLogged(slout,'mag_sq_out');
-MagSqSL = MagSqSL(FilterValid);
+MagSqSL = MagSqSL(FilterValid);%magnitude square of filter
+
+%to comapare and print logged signal values
 compareData(MagSqOut,MagSqSL,{2 3 3},'ML vs SL mag-squared output');
 
 % Peak value
@@ -119,34 +125,46 @@ fprintf('\nPeak location = %d, magnitude = %.3d using global max\n',location,pea
 fprintf('Peak location = %d, mag-squared = %.3d using local max\n',location_2,peak_2);
 fprintf('Peak mag-squared from Simulink = %.3d, error = %.3d\n',PeakSL,abs(peak_2-PeakSL));
 
-function signal_val = getLogged(simout_obj,signal_name)
+%%Defining the functions used in the code above
 
-logsout = simout_obj.logsout;
+%getLogged function
+function signal_val = getLogged(simout_obj,signal_name)%function instantiation
+
+logsout = simout_obj.logsout;%load logged signal 
+
+%checking for possible error in outputs
 if isempty(logsout)
     error('No logged signal found. Make sure ''%s'' is logged in the model',...
         signal_name);
 end
 
-sig = logsout.getElement(signal_name);
+sig = logsout.getElement(signal_name);%read elements of logged signal
+
+%checking for possible error in outputs
 if isempty(sig)
     error('Signal ''%s'' not found. Make sure it is logged and named correctly.',...
         signal_name);
 end
 
 signal_val = squeeze(sig.Values.Data);
+%squeeze returns an array with the same elements as the input,...
+%but with dimensions of length 1 removed.
 
 end
+
+%compareData function
+%function instantiation
 function err_vec = compareData(reference,actual,figure_number,textstring)
 
 % Vector input only
 if ~isvector(reference) || ~isvector(actual)
-    error('Input signals must be vector');
+    error('Input signals must be vector');%check for inputs to be vector
 else
     if isrow(reference)
-        reference = transpose(reference);
+        reference = transpose(reference);%convert to column vector
     end
     if isrow(actual)
-        actual = transpose(actual);
+        actual = transpose(actual);%convert to column vector
     end
 end
 
@@ -154,21 +172,23 @@ end
 if length(reference) ~= length(actual)
 %     warning(['Length of reference (%d) is not the same as actual signal (%d).'...
 %         ' Truncating the longer input.'],length(reference),length(actual));
+    
+    %balance length of both the vectors to be equal
     len = 1:min(length(reference),length(actual));
-    reference = reference(len);
-    actual = actual(len);
+    reference = reference(len);%length modification of reference
+    actual = actual(len);%length modification of actual
 end
 
 % Turn complex into vector
-if xor(isreal(reference),isreal(actual))
+if xor(isreal(reference),isreal(actual))%checking for nature of both signals
     error('Input signals are not both real or both complex');
 elseif ~isreal(reference)
-    ref_vec = double([real(reference) imag(reference)]);
-    act_vec = double([real(actual) imag(actual)]);
+    ref_vec = double([real(reference) imag(reference)]);%covert to double
+    act_vec = double([real(actual) imag(actual)]);%covert to double
     tag = {'(Real)','(Imag)'};
 else
-    ref_vec = double(reference);
-    act_vec = double(actual);
+    ref_vec = double(reference);%covert to double
+    act_vec = double(actual);%covert to double
     tag = {''};
 end
 
@@ -177,36 +197,47 @@ if iscell(figure_number)
     if size(ref_vec,2) > 1 % complex
         error('Cannot yet subplot multiple complex inputs');
     else
-        figure(figure_number{1})
+        figure(figure_number{1})%defines figure(2)
     end
 else
     figure(figure_number)
 end
-c = get(groot,'defaultAxesColorOrder');
+c = get(groot,'defaultAxesColorOrder');%used at plotting
 
 % Compute error
-err_vec = ref_vec - act_vec;
-max_err = max(abs(err_vec));
-max_ref = max(abs(ref_vec));
+err_vec = ref_vec - act_vec;%error vector to be printed on output
+max_err = max(abs(err_vec));%max error to be printed on output
+max_ref = max(abs(ref_vec));%max reference to be printed on output
+
+%output printed on command window
 fprintf('\nMaximum error for %s out of %d values\n',textstring,length(actual));
 
-
 for n = 1:size(ref_vec,2)
+   
+    %output printed on Command window
     fprintf('%s %d (absolute), %d (percentage)\n',tag{n},max_err(n),max_err(n)/max_ref(n)*100);
+   
     if iscell(figure_number)
-        total_plot = figure_number{2};
-        plot_num = figure_number{3};
+        total_plot = figure_number{2};% equal to 3
+        plot_num = figure_number{3};%figure number can be 1 to 3
+   
     else
         total_plot = size(ref_vec,2);
         plot_num = n;
     end
-    subplot(total_plot,1,plot_num)
-    plot(ref_vec(:,n),'Color',c(3,:));
-    hold on
-    plot(act_vec(:,n),'Color',c(1,:));
-    plot(err_vec(:,n),'Color',c(2,:));
-    legend('Reference','Actual','Error')
-    hold off
-    title(sprintf('%s %s, max error = %.3d',textstring,tag{n},max_err(n)));
+    
+    subplot(total_plot,1,plot_num)%subplot generation
+    
+    plot(ref_vec(:,n),'Color',c(3,:));%uses 1st color for reference
+    
+    hold on %plots 3 graphs over the same plot
+    
+    plot(act_vec(:,n),'Color',c(1,:));%uses 2nd color for actual
+    plot(err_vec(:,n),'Color',c(2,:));%uses 3rd color for error
+    
+    legend('Reference','Actual','Error')%defining legend
+    hold off 
+    
+    title(sprintf('%s %s, max error = %.3d',textstring,tag{n},max_err(n)));%title
 end
 end
