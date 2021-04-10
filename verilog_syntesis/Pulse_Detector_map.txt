@@ -1,0 +1,11 @@
+project_detect/Pulse Detector/Compute Power --> Compute_Power
+project_detect/Pulse Detector/Local Peak/MATLAB Function --> MATLAB_Function
+project_detect/Pulse Detector/Local Peak --> Local_Peak
+project_detect/Pulse Detector/Discrete FIR Filter HDL Optimized/FilterBank/FilterCoef --> FilterCoef
+project_detect/Pulse Detector/Discrete FIR Filter HDL Optimized/FilterBank/FilterCoef --> FilterCoef_block
+project_detect/Pulse Detector/Discrete FIR Filter HDL Optimized/FilterBank/FilterCoef --> FilterCoef_block1
+project_detect/Pulse Detector/Discrete FIR Filter HDL Optimized/FilterBank/subFilter/FilterTapSystolicWvldin --> FilterTapSystolicWvldin
+project_detect/Pulse Detector/Discrete FIR Filter HDL Optimized/FilterBank/subFilter --> subFilter
+project_detect/Pulse Detector/Discrete FIR Filter HDL Optimized/FilterBank --> FilterBank
+project_detect/Pulse Detector/Discrete FIR Filter HDL Optimized --> Discrete_FIR_Filter_HDL_Optimized
+project_detect/Pulse Detector --> Pulse_Detector
